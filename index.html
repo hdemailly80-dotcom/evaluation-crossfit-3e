@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Éval Crossfit 3e</title>
+<style>
+  :root { --yellow:#FFD600;--green:#4CAF50;--red:#E53935;--dark:#1a1a1a;--gray:#f5f5f5;--border:#ddd;--blue:#1565C0; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',sans-serif;background:var(--dark);color:#222;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+  .screen{display:none;width:100%;max-width:700px;background:#fff;border-radius:16px;padding:24px 20px;margin:12px;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+  .screen.active{display:block;}
+  h1{font-size:1.5rem;color:var(--dark);margin-bottom:6px;}
+  h2{font-size:1.2rem;color:var(--dark);margin-bottom:12px;}
+  .subtitle{font-size:0.85rem;color:#666;margin-bottom:20px;}
+  label{display:block;font-weight:600;margin:12px 0 4px;font-size:0.9rem;}
+  input,select{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:1rem;background:var(--gray);transition:border-color .2s;}
+  input:focus,select:focus{outline:none;border-color:var(--yellow);}
+  .btn{display:block;width:100%;padding:14px;margin-top:16px;border:none;border-radius:10px;font-size:1.05rem;font-weight:700;cursor:pointer;transition:transform .1s,opacity .2s;}
+  .btn:active{transform:scale(.97);}
+  .btn-yellow{background:var(--yellow);color:var(--dark);}
+  .btn-green{background:var(--green);color:#fff;}
+  .btn-red{background:var(--red);color:#fff;}
+  .btn-blue{background:var(--blue);color:#fff;}
+  .btn-gray{background:#888;color:#fff;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .sticky-bar{position:sticky;top:0;z-index:100;background:var(--dark);border-radius:10px;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;margin-bottom:16px;gap:10px;}
+  .chrono-display{font-size:1.8rem;font-weight:900;color:var(--yellow);letter-spacing:2px;font-variant-numeric:tabular-nums;}
+  .btn-norep{flex:1;padding:16px 10px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:1.4rem;font-weight:900;cursor:pointer;text-align:center;transition:transform .1s;}
+  .btn-norep:active{transform:scale(.95);}
+  .norep-count{font-size:1.1rem;color:#fff;background:#333;border-radius:8px;padding:10px 14px;font-weight:700;white-space:nowrap;}
+  .famille-card{border:2px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;}
+  .famille-card.locked{opacity:.45;pointer-events:none;}
+  .famille-card.active-famille{border-color:var(--yellow);}
+  .famille-card.done-famille{border-color:var(--green);background:#f0fff4;}
+  .famille-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .famille-name{font-size:1rem;font-weight:800;text-transform:uppercase;}
+  .famille-quota{font-size:0.85rem;color:#666;}
+  .niveau-label{display:inline-block;background:var(--yellow);color:var(--dark);border-radius:6px;padding:2px 10px;font-weight:700;font-size:0.9rem;margin-bottom:8px;}
+  .counter-row{display:flex;align-items:center;gap:14px;margin:8px 0;}
+  .btn-counter{width:80px;height:80px;border-radius:50%;border:none;background:var(--yellow);color:var(--dark);font-size:2.4rem;font-weight:900;cursor:pointer;flex-shrink:0;transition:transform .1s;display:flex;align-items:center;justify-content:center;}
+  .btn-counter:active{transform:scale(.92);}
+  .btn-counter:disabled{background:#ccc;cursor:not-allowed;}
+  .counter-val{font-size:2.4rem;font-weight:900;min-width:70px;text-align:center;}
+  .counter-quota{font-size:0.85rem;color:#888;}
+  .counter-total{font-size:0.8rem;color:#aaa;margin-top:2px;}
+  .timer-display{font-size:2.2rem;font-weight:900;color:var(--blue);text-align:center;letter-spacing:3px;margin:8px 0;font-variant-numeric:tabular-nums;}
+  .timer-controls{display:flex;gap:10px;}
+  .timer-controls .btn{margin-top:0;}
+  .eleve-note-block{border:2px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;}
+  .eleve-note-block h3{font-size:1rem;margin-bottom:10px;}
+  .note-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .note-item label{font-size:0.8rem;margin-bottom:2px;}
+  .note-item select{font-size:0.9rem;}
+  .note-finale-display{font-size:1.4rem;font-weight:900;color:var(--red);text-align:center;margin-top:8px;}
+  .recap-box{background:var(--gray);border-radius:10px;padding:12px;margin-bottom:12px;font-size:0.9rem;}
+  .recap-box strong{display:block;margin-bottom:6px;font-size:1rem;}
+  .recap-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #e0e0e0;}
+  .recap-row:last-child{border-bottom:none;}
+  .badge-done{display:inline-block;background:var(--green);color:#fff;border-radius:20px;padding:2px 12px;font-size:0.8rem;font-weight:700;}
+  .msg-success{text-align:center;padding:20px;font-size:1.1rem;color:var(--green);font-weight:700;}
+  .msg-error{text-align:center;padding:10px;font-size:0.9rem;color:var(--red);}
+  .separator{border:none;border-top:2px solid var(--border);margin:16px 0;}
+  .small-info{font-size:0.8rem;color:#888;margin-top:4px;}
+  .locked-msg{font-size:0.8rem;color:#999;font-style:italic;text-align:center;margin-top:4px;}
+
+  /* Popup niveau */
+  #nivelPopup{
+    display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    z-index:9999;background:var(--dark);color:var(--yellow);
+    border:4px solid var(--yellow);border-radius:20px;
+    padding:28px 40px;text-align:center;
+    box-shadow:0 8px 40px rgba(0,0,0,0.7);
+    animation:none;
+  }
+  #nivelPopup.show{display:block;animation:popIn .3s ease;}
+  @keyframes popIn{from{transform:translate(-50%,-50%) scale(.7);opacity:0;}to{transform:translate(-50%,-50%) scale(1);opacity:1;}}
+  #nivelPopup .popup-title{font-size:1rem;font-weight:600;margin-bottom:8px;color:#fff;}
+  #nivelPopup .popup-niveau{font-size:3rem;font-weight:900;letter-spacing:4px;}
+  #nivelPopup .popup-exo{font-size:1rem;color:#ccc;margin-top:6px;}
+
+  /* Bouton restauration */
+  .restore-banner{background:#1e3a5f;color:#fff;border-radius:10px;padding:14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .restore-banner p{font-size:0.9rem;flex:1;}
+  .restore-banner button{padding:10px 16px;background:var(--yellow);color:var(--dark);border:none;border-radius:8px;font-weight:700;cursor:pointer;white-space:nowrap;}
+
+  @media(orientation:portrait){body::before{content:"📱 Pour une meilleure expérience, tourne ton appareil en mode paysage.";display:block;position:fixed;top:0;left:0;right:0;background:var(--yellow);color:var(--dark);text-align:center;padding:8px;font-size:.85rem;font-weight:600;z-index:9999;}}
+</style>
+</head>
+<body>
+
+<div id="nivelPopup">
+  <div class="popup-title">Changement de niveau !</div>
+  <div class="popup-niveau" id="popupNiveau">N3</div>
+  <div class="popup-exo" id="popupExo"></div>
+</div>
+
+<!-- ÉCRAN 1 -->
+<div id="screen1" class="screen active">
+  <h1>🏋️ Éval Crossfit</h1>
+  <p class="subtitle">Renseignez les informations de votre groupe</p>
+  <div id="restoreBanner"></div>
+  <label>Classe</label>
+  <select id="classe">
+    <option value="">-- Choisir --</option>
+    <option>3A</option><option>3B</option><option>3C</option><option>3D</option><option>3E</option>
+  </select>
+  <label>Nombre d'élèves dans le groupe</label>
+  <select id="nbEleves" onchange="genPseudos()">
+    <option value="">-- Choisir --</option>
+    <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+  </select>
+  <div id="pseudosContainer"></div>
+  <hr class="separator">
+  <h2>Choix des exercices</h2>
+  <p class="small-info">Choisissez 1 exercice par famille dans l'ordre que vous souhaitez les réaliser.</p>
+  <div id="famillesContainer"></div>
+  <button class="btn btn-yellow" onclick="goToScreen2()">Suivant →</button>
+</div>
+
+<!-- ÉCRAN 2 -->
+<div id="screen2" class="screen">
+  <h1>⏱️ Prêt ?</h1>
+  <div id="recapPrep" class="recap-box"></div>
+  <p style="margin:16px 0;font-size:1rem;">Le chrono démarrera dès que vous cliquez sur <strong>Démarrer la séance</strong>.</p>
+  <button class="btn btn-green" onclick="startSession()">🚀 Démarrer la séance</button>
+  <button class="btn btn-blue" style="margin-top:8px" onclick="goTo('screen1')">← Modifier</button>
+</div>
+
+<!-- ÉCRAN 3 -->
+<div id="screen3" class="screen">
+  <div class="sticky-bar">
+    <div class="chrono-display" id="chronoDisplay">00:00</div>
+    <button class="btn-norep" onclick="addNoRep()">NO REP</button>
+    <div class="norep-count">❌ <span id="noRepDisplay">0</span></div>
+  </div>
+  <div id="exercicesContainer"></div>
+</div>
+
+<!-- ÉCRAN 4 -->
+<div id="screen4" class="screen">
+  <h1>📋 Notes</h1>
+  <p class="subtitle">Passez la tablette à chaque élève pour qu'il saisisse ses évaluations des autres.</p>
+  <div id="notesContainer"></div>
+  <button class="btn btn-green" onclick="goToScreen5()">Voir le récap →</button>
+</div>
+
+<!-- ÉCRAN 5 -->
+<div id="screen5" class="screen">
+  <h1>✅ Récapitulatif</h1>
+  <div id="recapFinal"></div>
+  <button class="btn btn-green" onclick="sendData()">📤 Envoyer les résultats</button>
+  <button class="btn btn-blue" style="margin-top:8px" onclick="goTo('screen4')">← Modifier les notes</button>
+  <div id="sendMsg"></div>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCH1lLeCTulx20fS2m3Msg1mUAQWI75S5rWX3QFGXNdnuCSvStr82CFEsHGWUFN_Bs/exec";
+const SAVE_KEY = "crossfit_eval_save";
+
+const FAMILLES = {
+  cardio:      { label:"Cardio",      baseQuota:100, unite:"reps",     exercices:["Burpees","Jumping jack","Corde à sauter","Mountain climber"] },
+  explosivite: { label:"Explosivité", baseQuota:50,  unite:"reps",     exercices:["Fentes","Squats","Box jump"] },
+  force:       { label:"Force",       baseQuota:50,  unite:"reps",     exercices:["Pompes","Dips","Med ball sto"] },
+  resistance:  { label:"Résistance",  baseQuota:120, unite:"secondes", exercices:["Chaise","Gainage","Abdo med ball"] }
+};
+const FAMILLE_ORDER = ["cardio","explosivite","force","resistance"];
+const BAREME_TEMPS  = [{max:20*60,pts:6},{max:22*60,pts:4.5},{max:24*60,pts:3},{max:Infinity,pts:1}];
+const BAREME_NOREP  = [{max:12,pts:6},{max:24,pts:4.5},{max:36,pts:3},{max:Infinity,pts:1}];
+
+let state = {
+  classe:"", nbEleves:0, pseudos:[],
+  choix:{}, quotas:{},
+  noRep:0,
+  chronoOffset:0,   // secondes déjà écoulées avant la dernière reprise
+  chronoStart:null, chronoInterval:null, chronoSeconds:0,
+  familleDone:{},
+  niveaux:{},       // fk -> { niveauIdx:0|1|2, counts:[0,0,0] }
+  resTimers:{},     // fk -> { remaining, running:false }
+  noteTemps:0, noteNoRep:0,
+  moyInv:{}, moyObs:{}, finalNotes:{}
+};
+
+// ══════════════════════════════════════════════════════
+// SAUVEGARDE LOCALE
+// ══════════════════════════════════════════════════════
+function saveState() {
+  const snap = {
+    classe: state.classe,
+    nbEleves: state.nbEleves,
+    pseudos: state.pseudos,
+    choix: state.choix,
+    quotas: state.quotas,
+    noRep: state.noRep,
+    chronoOffset: state.chronoSeconds, // on sauvegarde le temps écoulé actuel
+    familleDone: state.familleDone,
+    niveaux: state.niveaux,
+    resTimers: Object.fromEntries(
+      Object.entries(state.resTimers).map(([k,v]) => [k, { remaining: v.remaining, running: false }])
+    ),
+    noteTemps: state.noteTemps,
+    noteNoRep: state.noteNoRep,
+    savedAt: Date.now(),
+    screen: currentScreen()
+  };
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(snap)); } catch(e) {}
+}
+
+function loadSave() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+function clearSave() {
+  try { localStorage.removeItem(SAVE_KEY); } catch(e) {}
+}
+
+function currentScreen() {
+  const s = document.querySelector(".screen.active");
+  return s ? s.id : "screen1";
+}
+
+// ══════════════════════════════════════════════════════
+// POPUP NIVEAU
+// ══════════════════════════════════════════════════════
+let popupTimer = null;
+function showNiveauPopup(niveau, exoLabel) {
+  const el = document.getElementById("nivelPopup");
+  document.getElementById("popupNiveau").textContent = niveau;
+  document.getElementById("popupExo").textContent = exoLabel;
+  el.classList.add("show");
+  if (popupTimer) clearTimeout(popupTimer);
+  popupTimer = setTimeout(() => { el.classList.remove("show"); }, 2200);
+}
+
+// ══════════════════════════════════════════════════════
+// ÉCRAN 1
+// ══════════════════════════════════════════════════════
+function genPseudos() {
+  const n = parseInt(document.getElementById("nbEleves").value) || 0;
+  const c = document.getElementById("pseudosContainer");
+  c.innerHTML = "";
+  for (let i = 0; i < n; i++) {
+    c.innerHTML += `<label>Pseudo élève ${i+1}</label><input type="text" id="pseudo${i}" placeholder="Ex: Alex" autocomplete="off">`;
+  }
+}
+
+function buildFamillesUI() {
+  const c = document.getElementById("famillesContainer");
+  c.innerHTML = "";
+
+  // Ordre de passage : 4 menus déroulants de familles
+  c.innerHTML += `<div style="margin-bottom:16px;padding:12px;background:#fffbe6;border:2px solid var(--yellow);border-radius:10px">
+    <div style="font-weight:700;margin-bottom:8px">Ordre de passage des familles</div>
+    ${[1,2,3,4].map(n => `
+      <div style="margin-bottom:8px">
+        <label>Famille ${n}</label>
+        <select id="ordre_${n}" onchange="updateOrdreSelects(${n})">
+          <option value="">-- Choisir --</option>
+          ${FAMILLE_ORDER.map(fk => `<option value="${fk}">${FAMILLES[fk].label}</option>`).join("")}
+        </select>
+      </div>`).join("")}
+  </div>`;
+
+  // Exercice par famille (toujours dans l'ordre fixe pour la lisibilité)
+  FAMILLE_ORDER.forEach(fk => {
+    const f = FAMILLES[fk];
+    const ql = fk === "resistance" ? "2 min" : `${f.baseQuota} reps`;
+    c.innerHTML += `<div style="margin-bottom:12px">
+      <label>Exercice — <span style="color:#888">${f.label}</span> (${ql})</label>
+      <select id="sel_${fk}">
+        ${f.exercices.map(e => `<option value="${e}">${e}</option>`).join("")}
+      </select>
+    </div>`;
+  });
+}
+
+function updateOrdreSelects(changed) {
+  // Récupérer les 4 valeurs actuelles
+  const vals = [1,2,3,4].map(n => document.getElementById("ordre_"+n).value);
+  // Pour chaque select, griser les familles déjà choisies ailleurs
+  [1,2,3,4].forEach(n => {
+    const sel = document.getElementById("ordre_"+n);
+    const current = sel.value;
+    Array.from(sel.options).forEach(opt => {
+      if (!opt.value) return;
+      opt.disabled = vals.some((v, i) => v === opt.value && (i+1) !== n);
+    });
+  });
+}
+
+function calcQuota(fk, n) {
+  const base = FAMILLES[fk].baseQuota;
+  if (n === 2) return Math.round(base * 0.8);
+  if (n === 4) return Math.round(base * 1.3);
+  return base;
+}
+
+function goToScreen2() {
+  const classe = document.getElementById("classe").value;
+  const nb = parseInt(document.getElementById("nbEleves").value);
+  if (!classe) return alert("Choisissez une classe.");
+  if (!nb) return alert("Choisissez le nombre d'élèves.");
+  const pseudos = [];
+  for (let i = 0; i < nb; i++) {
+    const p = document.getElementById("pseudo"+i)?.value.trim();
+    if (!p) return alert(`Saisissez le pseudo de l'élève ${i+1}.`);
+    pseudos.push(p);
+  }
+  // Vérifier l'ordre de passage
+  const ordreChoisi = [1,2,3,4].map(n => document.getElementById("ordre_"+n).value);
+  if (ordreChoisi.some(v => !v)) return alert("Définissez l'ordre de passage des 4 familles.");
+  if (new Set(ordreChoisi).size !== 4) return alert("Chaque famille doit apparaître une seule fois dans l'ordre.");
+
+  const choix = {};
+  for (const fk of FAMILLE_ORDER) {
+    choix[fk] = document.getElementById("sel_"+fk).value;
+    if (!choix[fk]) return alert(`Choisissez un exercice pour ${FAMILLES[fk].label}.`);
+  }
+  state.classe = classe; state.nbEleves = nb; state.pseudos = pseudos; state.choix = choix;
+  state.familleOrder = ordreChoisi; // ordre personnalisé
+  state.quotas = {};
+  FAMILLE_ORDER.forEach(fk => { state.quotas[fk] = calcQuota(fk, nb); });
+
+  let html = `<strong>Groupe — ${classe}</strong>`;
+  html += `<div class="recap-row"><span>Élèves</span><span>${pseudos.join(", ")}</span></div>`;
+  FAMILLE_ORDER.forEach(fk => {
+    const q = state.quotas[fk];
+    const u = FAMILLES[fk].unite === "secondes" ? `${q}s` : `${q} reps`;
+    html += `<div class="recap-row"><span>${FAMILLES[fk].label}</span><span>${choix[fk]} — ${u}</span></div>`;
+  });
+  document.getElementById("recapPrep").innerHTML = html;
+  goTo("screen2");
+}
+
+// ══════════════════════════════════════════════════════
+// CHRONO
+// ══════════════════════════════════════════════════════
+function startChrono() {
+  state.chronoStart = Date.now() - state.chronoOffset * 1000;
+  state.chronoInterval = setInterval(() => {
+    state.chronoSeconds = Math.floor((Date.now() - state.chronoStart) / 1000);
+    document.getElementById("chronoDisplay").textContent = formatTime(state.chronoSeconds);
+    saveState(); // sauvegarde continue
+  }, 1000);
+}
+
+function stopChrono() {
+  clearInterval(state.chronoInterval);
+  state.chronoInterval = null;
+}
+
+function formatTime(s) {
+  return String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
+}
+
+function addNoRep() {
+  state.noRep++;
+  document.getElementById("noRepDisplay").textContent = state.noRep;
+  saveState();
+}
+
+// ══════════════════════════════════════════════════════
+// ÉCRAN 3 — SÉANCE
+// ══════════════════════════════════════════════════════
+function startSession() {
+  state.familleDone = {};
+  state.niveaux = {};
+  state.resTimers = {};
+  state.noRep = 0;
+  state.chronoOffset = 0;
+  document.getElementById("noRepDisplay").textContent = "0";
+  const order = state.familleOrder || FAMILLE_ORDER;
+  order.forEach(fk => {
+    state.familleDone[fk] = false;
+    state.niveaux[fk] = { niveauIdx:0, counts:[0,0,0] };
+  });
+  buildExercicesUI();
+  goTo("screen3");
+  startChrono();
+  saveState();
+}
+
+function buildExercicesUI() {
+  const c = document.getElementById("exercicesContainer");
+  c.innerHTML = "";
+  const order = state.familleOrder || FAMILLE_ORDER;
+  order.forEach((fk, idx) => {
+    const exo = state.choix[fk];
+    const quota = state.quotas[fk];
+    const done = state.familleDone[fk];
+    const niv = state.niveaux[fk] || { niveauIdx:0, counts:[0,0,0] };
+    // unlocked si: premier, ou précédent done
+    const unlocked = idx === 0 || state.familleDone[FAMILLE_ORDER[idx-1]];
+    const locked = !unlocked && !done;
+    const cls = done ? "done-famille" : (unlocked ? "active-famille" : "locked");
+
+    if (fk === "resistance") {
+      const rt = state.resTimers[fk] || { remaining: quota };
+      c.innerHTML += `
+      <div class="famille-card ${cls}" id="card_${fk}">
+        <div class="famille-header">
+          <span class="famille-name">${FAMILLES[fk].label} — ${exo}</span>
+          <span class="famille-quota">${quota}s × 3 niveaux</span>
+        </div>
+        ${locked ? `<div class="locked-msg" id="lockmsg_${fk}">🔒 En attente de la famille précédente</div>` : ""}
+        ${done ? "" : `<div class="niveau-label" id="niv_${fk}">N${niv.niveauIdx+2}</div>
+        <div class="timer-display" id="timerDisp_${fk}">${formatTime(rt.remaining)}</div>
+        <div class="timer-controls">
+          <button class="btn btn-green" id="btnStart_${fk}" onclick="startResistanceTimer('${fk}')">▶ Démarrer</button>
+          <button class="btn btn-blue" id="btnPause_${fk}" onclick="pauseResistanceTimer('${fk}')" disabled>⏸ Pause</button>
+        </div>`}
+        ${done ? `<div style="text-align:center;margin-top:8px"><span class="badge-done">✓ Terminé</span></div>` : ""}
+      </div>`;
+    } else {
+      const count = niv.counts[niv.niveauIdx] || 0;
+      const total = niv.counts.reduce((a,b)=>a+b,0);
+      c.innerHTML += `
+      <div class="famille-card ${cls}" id="card_${fk}">
+        <div class="famille-header">
+          <span class="famille-name">${FAMILLES[fk].label} — ${exo}</span>
+          <span class="famille-quota">${quota} reps</span>
+        </div>
+        ${locked ? `<div class="locked-msg" id="lockmsg_${fk}">🔒 En attente de la famille précédente</div>` : ""}
+        ${done ? "" : `<div class="niveau-label" id="niv_${fk}">N${niv.niveauIdx+2}</div>
+        <div class="counter-row">
+          <button class="btn-counter" id="btn_${fk}" onclick="addRep('${fk}')">+</button>
+          <div>
+            <div class="counter-val" id="cnt_${fk}">${count}</div>
+            <div class="counter-quota">/ ${quota} <span style="font-size:.75rem;color:#aaa">(ce niveau)</span></div>
+            <div class="counter-total" id="total_${fk}">Total : ${total} / ${quota*3}</div>
+          </div>
+        </div>`}
+        ${done ? `<div style="text-align:center;margin-top:8px"><span class="badge-done">✓ Terminé</span></div>` : ""}
+      </div>`;
+    }
+  });
+}
+
+function unlockNextFamille(doneFk) {
+  const order = state.familleOrder || FAMILLE_ORDER;
+  const idx = order.indexOf(doneFk);
+  if (idx < order.length - 1) {
+    const nextFk = order[idx+1];
+    const card = document.getElementById("card_"+nextFk);
+    if (card) {
+      card.classList.remove("locked");
+      card.classList.add("active-famille");
+      const lm = document.getElementById("lockmsg_"+nextFk);
+      if (lm) lm.remove();
+    }
+  }
+}
+
+function addRep(fk) {
+  if (state.familleDone[fk]) return;
+  const niv = state.niveaux[fk];
+  const quota = state.quotas[fk];
+  const idx = niv.niveauIdx;
+  niv.counts[idx]++;
+  document.getElementById("cnt_"+fk).textContent = niv.counts[idx];
+  const total = niv.counts.reduce((a,b)=>a+b,0);
+  document.getElementById("total_"+fk).textContent = `Total : ${total} / ${quota*3}`;
+
+  if (niv.counts[idx] >= quota) {
+    if (niv.niveauIdx < 2) {
+      niv.niveauIdx++;
+      niv.counts[niv.niveauIdx] = 0;
+      const newNiv = "N"+(niv.niveauIdx+2);
+      document.getElementById("niv_"+fk).textContent = newNiv;
+      document.getElementById("cnt_"+fk).textContent = "0";
+      showNiveauPopup(newNiv, `${FAMILLES[fk].label} — ${state.choix[fk]}`);
+    } else {
+      finishFamille(fk);
+    }
+  }
+  saveState();
+}
+
+function startResistanceTimer(fk) {
+  const niv = state.niveaux[fk];
+  const quota = state.quotas[fk];
+  if (!state.resTimers[fk]) state.resTimers[fk] = { remaining: quota, running: false };
+  const t = state.resTimers[fk];
+  if (t.running) return;
+  t.running = true;
+  document.getElementById("btnStart_"+fk).disabled = true;
+  document.getElementById("btnPause_"+fk).disabled = false;
+
+  t.interval = setInterval(() => {
+    t.remaining--;
+    document.getElementById("timerDisp_"+fk).textContent = formatTime(t.remaining);
+    saveState();
+
+    if (t.remaining <= 0) {
+      clearInterval(t.interval);
+      t.running = false;
+      document.getElementById("btnPause_"+fk).disabled = true;
+      if (niv.niveauIdx < 2) {
+        niv.niveauIdx++;
+        const newNiv = "N"+(niv.niveauIdx+2);
+        state.resTimers[fk] = { remaining: quota, running: false };
+        document.getElementById("niv_"+fk).textContent = newNiv;
+        document.getElementById("timerDisp_"+fk).textContent = formatTime(quota);
+        document.getElementById("btnStart_"+fk).disabled = false;
+        showNiveauPopup(newNiv, `${FAMILLES[fk].label} — ${state.choix[fk]}`);
+      } else {
+        finishFamille(fk);
+      }
+    }
+  }, 1000);
+}
+
+function pauseResistanceTimer(fk) {
+  const t = state.resTimers[fk];
+  if (!t || !t.running) return;
+  clearInterval(t.interval);
+  t.running = false;
+  document.getElementById("btnStart_"+fk).disabled = false;
+  document.getElementById("btnPause_"+fk).disabled = true;
+  saveState();
+}
+
+function finishFamille(fk) {
+  state.familleDone[fk] = true;
+  const card = document.getElementById("card_"+fk);
+  card.classList.remove("active-famille");
+  card.classList.add("done-famille");
+  const btn = document.getElementById("btn_"+fk);
+  if (btn) btn.disabled = true;
+  const bs = document.getElementById("btnStart_"+fk);
+  if (bs) bs.disabled = true;
+  const bp = document.getElementById("btnPause_"+fk);
+  if (bp) bp.disabled = true;
+  card.innerHTML += `<div style="text-align:center;margin-top:8px"><span class="badge-done">✓ Terminé</span></div>`;
+  unlockNextFamille(fk);
+  saveState();
+
+  const order = state.familleOrder || FAMILLE_ORDER;
+  if (order.every(f => state.familleDone[f])) {
+    stopChrono();
+    state.noteTemps = getBareme(state.chronoSeconds, BAREME_TEMPS);
+    state.noteNoRep = getBareme(state.noRep, BAREME_NOREP);
+    saveState();
+    setTimeout(() => goToScreen4(), 800);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// ÉCRAN 4
+// ══════════════════════════════════════════════════════
+function goToScreen4() {
+  const c = document.getElementById("notesContainer");
+  c.innerHTML = "";
+  state.pseudos.forEach((p, i) => {
+    let html = `<div class="eleve-note-block">
+      <h3>🎯 Tour de <strong>${p}</strong></h3>
+      <p style="font-size:.82rem;color:#666;margin-bottom:10px">${p} évalue les autres élèves ci-dessous.</p>`;
+    state.pseudos.forEach((autre, j) => {
+      if (j === i) return;
+      html += `<div style="margin-bottom:10px;padding:8px;background:#f9f9f9;border-radius:8px">
+        <div style="font-weight:700;margin-bottom:6px">→ ${autre}</div>
+        <div class="note-grid">
+          <div class="note-item">
+            <label>Investissement (1–4)</label>
+            <select id="inv_${i}_${j}">
+              <option value="">--</option>
+              <option value="1">1 — Très peu (≤2 familles ou peu de reps)</option>
+              <option value="2">2 — Limité (3 familles max, 1-2 niveaux)</option>
+              <option value="3">3 — Bien (toutes familles, 1-2 niveaux)</option>
+              <option value="4">4 — Excellent (toutes familles, ≥2 niveaux)</option>
+            </select>
+          </div>
+          <div class="note-item">
+            <label>Observateur (1–4)</label>
+            <select id="obs_${i}_${j}">
+              <option value="">--</option>
+              <option value="1">1 — S'absente</option>
+              <option value="2">2 — Manque d'attention</option>
+              <option value="3">3 — Dans son rôle</option>
+              <option value="4">4 — Coach (compte, chrono, valide)</option>
+            </select>
+          </div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+    c.innerHTML += html;
+  });
+  goTo("screen4");
+}
+
+// ══════════════════════════════════════════════════════
+// ÉCRAN 5
+// ══════════════════════════════════════════════════════
+function goToScreen5() {
+  const n = state.pseudos.length;
+  const inv = {}, obs = {};
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      if (i === j) continue;
+      const invEl = document.getElementById(`inv_${i}_${j}`);
+      const obsEl = document.getElementById(`obs_${i}_${j}`);
+      if (invEl && !invEl.value) return alert(`Note investissement manquante : ${state.pseudos[i]} → ${state.pseudos[j]}`);
+      if (obsEl && !obsEl.value) return alert(`Note observateur manquante : ${state.pseudos[i]} → ${state.pseudos[j]}`);
+      if (!inv[j]) inv[j] = [];
+      if (!obs[j]) obs[j] = [];
+      if (invEl) inv[j].push(parseFloat(invEl.value));
+      if (obsEl) obs[j].push(parseFloat(obsEl.value));
+    }
+  }
+  state.moyInv = {}; state.moyObs = {};
+  state.pseudos.forEach((_, i) => {
+    state.moyInv[i] = inv[i] ? Math.round(avg(inv[i])*10)/10 : 0;
+    state.moyObs[i] = obs[i] ? Math.round(avg(obs[i])*10)/10 : 0;
+  });
+  buildRecapFinal();
+  goTo("screen5");
+}
+
+function avg(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function getBareme(val, bar) { for (const b of bar) { if (val <= b.max) return b.pts; } return bar[bar.length-1].pts; }
+
+function buildRecapFinal() {
+  const c = document.getElementById("recapFinal");
+  state.finalNotes = {};
+  let html = `<div class="recap-box">
+    <strong>Récapitulatif de séance</strong>
+    <div class="recap-row"><span>Classe</span><span>${state.classe}</span></div>
+    <div class="recap-row"><span>Temps total</span><span>${formatTime(state.chronoSeconds)}</span></div>
+    <div class="recap-row"><span>Note temps</span><span>${state.noteTemps} / 6</span></div>
+    <div class="recap-row"><span>No Rep</span><span>${state.noRep} → ${state.noteNoRep} / 6</span></div>
+  </div>`;
+  state.pseudos.forEach((p, i) => {
+    const fin = Math.round((state.noteTemps + state.noteNoRep + state.moyInv[i] + state.moyObs[i])*10)/10;
+    state.finalNotes[i] = { noteTemps:state.noteTemps, noteNoRep:state.noteNoRep, noteInv:state.moyInv[i], noteObs:state.moyObs[i], noteFinale:fin };
+    html += `<div class="recap-box">
+      <strong>${p}</strong>
+      <div class="recap-row"><span>Temps</span><span>${state.noteTemps} / 6</span></div>
+      <div class="recap-row"><span>No Rep</span><span>${state.noteNoRep} / 6</span></div>
+      <div class="recap-row"><span>Investissement</span><span>${state.moyInv[i]} / 4</span></div>
+      <div class="recap-row"><span>Observateur</span><span>${state.moyObs[i]} / 4</span></div>
+      <div class="note-finale-display">Note finale : ${fin} / 20</div>
+    </div>`;
+  });
+  c.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════
+// RESTAURATION
+// ══════════════════════════════════════════════════════
+function checkRestore() {
+  const save = loadSave();
+  if (!save || !save.pseudos || save.pseudos.length === 0) return;
+  const elapsed = Math.floor((Date.now() - save.savedAt) / 1000);
+  const when = elapsed < 60 ? `il y a ${elapsed}s` : `il y a ${Math.floor(elapsed/60)} min`;
+  const banner = document.getElementById("restoreBanner");
+  banner.innerHTML = `<div class="restore-banner">
+    <p>💾 Une session est sauvegardée (${save.classe} — ${save.pseudos.join(", ")} — ${when})<br>
+    <small>Écran : ${save.screen} · Chrono : ${formatTime(save.chronoOffset)} · No Rep : ${save.noRep}</small></p>
+    <button onclick="restoreSession()">Restaurer</button>
+  </div>`;
+}
+
+function restoreSession() {
+  const save = loadSave();
+  if (!save) return;
+
+  // Restaurer le state
+  state.classe     = save.classe;
+  state.nbEleves   = save.nbEleves;
+  state.pseudos    = save.pseudos;
+  state.choix      = save.choix;
+  state.quotas     = save.quotas;
+  state.noRep      = save.noRep;
+  state.chronoOffset = save.chronoOffset;
+  state.chronoSeconds = save.chronoOffset;
+  state.familleDone = save.familleDone || {};
+  state.niveaux    = save.niveaux || {};
+  state.resTimers  = {};
+  state.noteTemps  = save.noteTemps || 0;
+  state.noteNoRep  = save.noteNoRep || 0;
+
+  // Restaurer les timers résistance (sans les relancer)
+  if (save.resTimers) {
+    Object.entries(save.resTimers).forEach(([k,v]) => {
+      state.resTimers[k] = { remaining: v.remaining, running: false, interval: null };
+    });
+  }
+
+  const scr = save.screen || "screen1";
+
+  if (scr === "screen3") {
+    buildExercicesUI();
+    document.getElementById("noRepDisplay").textContent = state.noRep;
+    document.getElementById("chronoDisplay").textContent = formatTime(state.chronoSeconds);
+    goTo("screen3");
+    // Relancer le chrono si la séance n'est pas terminée
+    const allDone = FAMILLE_ORDER.every(f => state.familleDone[f]);
+    if (!allDone) startChrono();
+  } else if (scr === "screen4") {
+    goToScreen4();
+  } else if (scr === "screen1" || scr === "screen2") {
+    // Repopuler le formulaire
+    document.getElementById("classe").value = state.classe;
+    document.getElementById("nbEleves").value = state.nbEleves;
+    genPseudos();
+    setTimeout(() => {
+      state.pseudos.forEach((p, i) => {
+        const el = document.getElementById("pseudo"+i);
+        if (el) el.value = p;
+      });
+      FAMILLE_ORDER.forEach(fk => {
+        const el = document.getElementById("sel_"+fk);
+        if (el) el.value = state.choix[fk] || "";
+      });
+    }, 50);
+    goTo(scr);
+  }
+
+  document.getElementById("restoreBanner").innerHTML = "";
+}
+
+// ══════════════════════════════════════════════════════
+// ENVOI
+// ══════════════════════════════════════════════════════
+async function sendData() {
+  document.getElementById("sendMsg").innerHTML = "<p style='text-align:center;color:#666'>Envoi en cours…</p>";
+  document.querySelector("#screen5 .btn-green").disabled = true;
+
+  const eleves = state.pseudos.map((p, i) => ({
+    pseudo: p,
+    exoCardio: state.choix.cardio,
+    exoExplo: state.choix.explosivite,
+    exoForce: state.choix.force,
+    exoResistance: state.choix.resistance,
+    temps: formatTime(state.chronoSeconds),
+    noteTemps: state.finalNotes[i].noteTemps,
+    nbNoRep: state.noRep,
+    noteNoRep: state.finalNotes[i].noteNoRep,
+    noteInvestissement: state.finalNotes[i].noteInv,
+    noteObservateur: state.finalNotes[i].noteObs,
+    noteFinale: state.finalNotes[i].noteFinale
+  }));
+
+  try {
+    const resp = await fetch(SCRIPT_URL, { method:"POST", body:JSON.stringify({classe:state.classe, eleves}) });
+    const data = await resp.json();
+    if (data.status === "ok") {
+      clearSave();
+      document.getElementById("sendMsg").innerHTML = `<p class="msg-success">✅ Données envoyées dans l'onglet ${state.classe} !</p>`;
+    } else throw new Error(data.message);
+  } catch(err) {
+    document.getElementById("sendMsg").innerHTML = `<p class="msg-error">❌ Erreur : ${err.message}</p>`;
+    document.querySelector("#screen5 .btn-green").disabled = false;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════
+function goTo(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0,0);
+}
+
+// ── Init ──────────────────────────────────────────────
+buildFamillesUI();
+checkRestore();
+</script>
+</body>
+</html>
